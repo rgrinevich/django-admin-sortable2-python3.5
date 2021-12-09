@@ -44,7 +44,7 @@ def _get_default_ordering(model, model_admin):
         none, prefix, field_name = model._meta.ordering[0].rpartition('-')
     except (AttributeError, IndexError):
         raise ImproperlyConfigured(
-            f"Model {model.__module__}.{model.__name__} requires a list or tuple 'ordering' in its Meta class"
+            "Model {}.{} requires a list or tuple 'ordering' in its Meta class".format(model.__module__, model.__name__)
         )
     else:
         return prefix, field_name
@@ -141,7 +141,7 @@ class SortableAdminMixin(SortableAdminBase):
             self.ordering = [f for f in self.ordering if f != rev_field]
 
     def _get_update_url_name(self):
-        return f'{self.model._meta.app_label}_{self.model._meta.model_name}_sortable_update'
+        return '{}_{}_sortable_update'.format(self.model._meta.app_label, self.model._meta.model_name)
 
     def get_urls(self):
         my_urls = [
@@ -176,7 +176,7 @@ class SortableAdminMixin(SortableAdminBase):
         first_order_direction, first_order_field_index = self._get_first_ordering(request)
         if first_order_field_index == self.default_order_field_index:
             self.enable_sorting = True
-            self.order_by = f"{first_order_direction}{self.default_order_field}"
+            self.order_by = "{}{}".format(first_order_direction, self.default_order_field)
         else:
             self.enable_sorting = False
         return super().get_changelist(request, **kwargs)
@@ -297,15 +297,15 @@ class SortableAdminMixin(SortableAdminBase):
 
         if endorder < startorder:  # Drag up
             move_filter = {
-                f'{rank_field}__gte': endorder,
-                f'{rank_field}__lte': startorder - 1,
+                '{}__gte'.format(rank_field): endorder,
+                '{}__lte'.format(rank_field): startorder - 1,
             }
             move_delta = +1
-            order_by = f'-{rank_field}'
+            order_by = '-{}'.format(rank_field)
         elif endorder > startorder:  # Drag down
             move_filter = {
-                f'{rank_field}__gte': startorder + 1,
-                f'{rank_field}__lte': endorder,
+                '{}__gte'.format(rank_field): startorder + 1,
+                '{}__lte'.format(rank_field): endorder,
             }
             move_delta = -1
             order_by = rank_field
@@ -412,7 +412,7 @@ class SortableAdminMixin(SortableAdminBase):
         queryset_size = queryset.count()
         page_size = page.end_index() - page.start_index() + 1
         if queryset_size > page_size:
-            msg = _(f"The target page size is {page_size}. It is too small for {queryset_size} items.")
+            msg = _("The target page size is {}. It is too small for {} items.".format(page_size, queryset_size))
             self.message_user(request, msg, level=messages.ERROR)
             return
 
@@ -446,7 +446,7 @@ class SortableAdminMixin(SortableAdminBase):
         """
         Returns a callback URL used for updating items via AJAX drag-n-drop
         """
-        return reverse(f'{self.admin_site.name}:{self._get_update_url_name()}')
+        return reverse('{}:{}'.format(self.admin_site.name, self._get_update_url_name()))
 
 
 class PolymorphicSortableAdminMixin(SortableAdminMixin):
@@ -569,8 +569,7 @@ class SortableInlineAdminMixin(SortableAdminBase):
         elif self.is_tabular:
             return 'adminsortable2/tabular.html'
         raise ImproperlyConfigured(
-            f'Class {self.__module__}.{self.__class__} must also derive from admin.TabularInline or '
-            f'admin.StackedInline'
+            'Class {}.{} must also derive from admin.TabularInline or admin.StackedInline'.format(self.__module__, self.__class__)
         )
 
 
